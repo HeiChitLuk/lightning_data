@@ -34,7 +34,7 @@ jobs:
 
       # Run the scraping script
       - name: Run scrape script
-        run: python scrape_lightning.py
+        run: python lightning_scrape.py
 
       # Commit and push changes to the repository
       - name: Commit and push if there are changes
