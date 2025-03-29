@@ -28,7 +28,7 @@ jobs:
           pip install requests
 
       - name: Run scrape script
-        run: python scrape_lightning.py
+        run: python lightning_scrape.py
 
       - name: Debug git configuration
         run: |
