@@ -1,42 +1,35 @@
 name: Daily Lightning Data Scrape
 
-# Controls when the workflow will run
 on:
   schedule:
-    # Runs every day at 00:00 UTC (midnight)
     - cron: '0 0 * * *'
-  # Allows manual triggering from the GitHub Actions tab
   workflow_dispatch:
 
-# Define the jobs to run
 jobs:
   scrape-and-update:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Explicitly grant write access to repository contents
 
-    # Steps to execute
     steps:
-      # Checks out your repository under $GITHUB_WORKSPACE
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # Use default GITHUB_TOKEN for checkout
 
-      # Sets up Python environment
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # Install dependencies (if any, e.g., requests)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install requests
 
-      # Run the scraping script
       - name: Run scrape script
         run: python lightning_scrape.py
 
-      # Commit and push changes to the repository
       - name: Commit and push if there are changes
         run: |
           git config --local user.name "GitHub Action"
@@ -44,5 +37,3 @@ jobs:
           git add lightning_data.json
           git commit -m "Update lightning data - $(date -u)" || echo "No changes to commit"
           git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
