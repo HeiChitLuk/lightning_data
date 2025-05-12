@@ -2,16 +2,31 @@ import json
 import requests
 from datetime import datetime
 
-def scrape_lightning_data(url, output_file="lightning_data.json"):
+def scrape_lightning_data(urls, output_file="lightning_data.json"):
     try:
-        # Make the API request
-        response = requests.get(url)
-        response.raise_for_status()  # Check for HTTP errors
-        json_data = response.json()  # Parse the JSON response
+        all_new_strikes = []
+        # Process each URL
+        for url in urls:
+            try:
+                # Make the API request
+                response = requests.get(url)
+                response.raise_for_status()  # Check for HTTP errors
+                json_data = response.json()  # Parse the JSON response
+                
+                # Extract strikes from new data
+                new_strikes = json_data["lightning_strikes"]
+                all_new_strikes.extend(new_strikes)
+                print(f"Successfully fetched {len(new_strikes)} strikes from {url}")
+            except requests.exceptions.RequestException as e:
+                print(f"Error fetching data from {url}: {str(e)}")
+                continue
+            except KeyError as e:
+                print(f"Data format error in response from {url}: {str(e)}")
+                continue
         
-        # Extract last update time and strikes from new data
-        
-        new_strikes = json_data["lightning_strikes"]
+        if not all_new_strikes:
+            print("No new strikes fetched from any URL.")
+            return
         
         # Load existing data if file exists
         try:
@@ -29,9 +44,9 @@ def scrape_lightning_data(url, output_file="lightning_data.json"):
         
         # Check for new unique strikes (based on strike_time and coordinates)
         unique_new_strikes = []
-        for new_strike in new_strikes:
+        for new_strike in all_new_strikes:
             is_duplicate = False
-            for existing_strike in existing_strikes:
+            for existing_strike in existing_strikes + unique_new_strikes:
                 if (new_strike["strike_time"] == existing_strike["strike_time"] and 
                     new_strike["coordinates"] == existing_strike["coordinates"]):
                     is_duplicate = True
@@ -42,8 +57,6 @@ def scrape_lightning_data(url, output_file="lightning_data.json"):
         # Combine strikes
         updated_strikes = existing_strikes + unique_new_strikes
         total_strikes = len(updated_strikes)
-        
-        # Update last_update only if newer
         
         # Print the results
         print("\nNew Lightning Strikes Added:")
@@ -70,15 +83,14 @@ def scrape_lightning_data(url, output_file="lightning_data.json"):
             json.dump(data_to_save, f, indent=4)
         print(f"\nData updated in {output_file}")
         
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data: {str(e)}")
-    except KeyError as e:
-        print(f"Data format error: {str(e)}")
     except Exception as e:
         print(f"Error occurred: {str(e)}")
 
-# URL provided
-url = "https://data.consumer-digital.api.metoffice.gov.uk/v1/lightning"
+# List of URLs
+urls = [
+    "https://data.consumer-digital.api.metoffice.gov.uk/v1/lightning",
+    "https://data.consumer-digital.api.metoffice.gov.uk/v1/lightning?last-minutes=1&chunk=135",  # Example second URL
+]
 
 # Call the function
-scrape_lightning_data(url)
+scrape_lightning_data(urls)
