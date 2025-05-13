@@ -2,19 +2,42 @@ import json
 import requests
 from datetime import datetime
 
-def scrape_lightning_data(urls, output_file="lightning_data.json"):
+def scrape_lightning_data(base_url, output_file="lightning_data.json"):
     try:
         all_new_strikes = []
-        # Process each URL
-        for url in urls:
+        
+        # Fetch the base URL to get chunks and strikes
+        try:
+            response = requests.get(base_url)
+            response.raise_for_status()  # Check for HTTP errors
+            json_data = response.json()  # Parse the JSON response
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching data from base URL {base_url}: {str(e)}")
+            return
+        except KeyError as e:
+            print(f"Data format error in response from base URL: {str(e)}")
+            return
+
+        # Extract strikes from base URL
+        base_strikes = json_data.get("lightning_strikes", [])
+        all_new_strikes.extend(base_strikes)
+        print(f"Successfully fetched {len(base_strikes)} strikes from base URL {base_url}")
+
+        # Extract chunks and generate chunk URLs
+        chunks = json_data.get("chunks", [])
+        chunk_urls = [f"{base_url}?chunk={chunk['chunk']}" for chunk in chunks]
+        if not chunks:
+            print("No chunks found in base URL response.")
+
+        # Process each chunk URL
+        for url in chunk_urls:
             try:
-                # Make the API request
                 response = requests.get(url)
                 response.raise_for_status()  # Check for HTTP errors
                 json_data = response.json()  # Parse the JSON response
                 
-                # Extract strikes from new data
-                new_strikes = json_data["lightning_strikes"]
+                # Extract strikes from chunk data
+                new_strikes = json_data.get("lightning_strikes", [])
                 all_new_strikes.extend(new_strikes)
                 print(f"Successfully fetched {len(new_strikes)} strikes from {url}")
             except requests.exceptions.RequestException as e:
@@ -86,11 +109,8 @@ def scrape_lightning_data(urls, output_file="lightning_data.json"):
     except Exception as e:
         print(f"Error occurred: {str(e)}")
 
-# List of URLs
-urls = [
-    "https://data.consumer-digital.api.metoffice.gov.uk/v1/lightning",
-    "https://data.consumer-digital.api.metoffice.gov.uk/v1/lightning?last-minutes=1&chunk=135",  # Example second URL
-]
+# Base URL
+base_url = "https://data.consumer-digital.api.metoffice.gov.uk/v1/lightning"
 
 # Call the function
-scrape_lightning_data(urls)
+scrape_lightning_data(base_url)
