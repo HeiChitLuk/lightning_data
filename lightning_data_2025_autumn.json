@@ -1,0 +1,19 @@
+{
+    "lightning_strikes": [
+        {
+            "strike_time": "2025-03-29T15:55:37.822820Z",
+            "coordinates": [
+                -4.897,
+                58.36
+            ]
+        },
+        {
+            "strike_time": "2025-10-17T02:45:17.892483Z",
+            "coordinates": [
+                4.177,
+                50.907
+            ]
+        }
+    ],
+    "total_strikes": 2
+}
