@@ -2,7 +2,7 @@ import json
 import requests
 from datetime import datetime
 
-def scrape_lightning_data(base_url, output_file="lightning_data.json"):
+def scrape_lightning_data(base_url, output_file="lightning_data_2025_autumn.json"):
     try:
         all_new_strikes = []
         
@@ -114,3 +114,4 @@ base_url = "https://data.consumer-digital.api.metoffice.gov.uk/v1/lightning"
 
 # Call the function
 scrape_lightning_data(base_url)
+
